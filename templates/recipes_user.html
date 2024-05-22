@@ -1,0 +1,33 @@
+    <link rel="stylesheet" crossorigin="anonymous"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" >
+
+	<script crossorigin="anonymous"
+	src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" >
+	</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<p class="h4">Recipes</p>
+    <table class="table table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th scope="col">Dish Name</th>
+        <th scope="col">Product Name</th>
+        <th scope="col">Quantity</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for recipe in recipes %}
+            <tr>
+                <td>{{ recipe.dish_name }}</td>
+                <td>{{ recipe.product_name }}</td>
+                <td>{{ recipe.qtt }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+   <div class="container"></div>
+    <div class="d-flex align-items-end justify-content-end">
+        <div>
+            <a class="btn btn-dark" href="tables">To Tables</a>
+        </div>
+    </div>

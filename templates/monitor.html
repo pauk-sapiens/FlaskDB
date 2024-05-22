@@ -1,0 +1,241 @@
+    <link rel="stylesheet" crossorigin="anonymous"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" >
+
+	<script crossorigin="anonymous"
+	src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" >
+	</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+
+    <p class="h4">Отчеты</p>
+<br>
+
+  <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#exampleModalCenter">
+      Show products amount in storage
+  </button>
+
+
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Отчет</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {{product_amount[0]}}: {{product_amount[1]}}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<br><br><br>
+    <p class="h6">Show supplier and storage info for product</p>
+        <form class="form-inline" method="POST">
+  <div class="form-group">
+ <div class="input-group">
+  <select class="custom-select" id="product", name="product">
+      <option value="choose" >Choose...</option>
+      {% for product in products %}
+      <option value="{{product.name}}" >{{product.name}}</option>
+      {% endfor %}
+  </select>
+  <div class="input-group-append">
+  <button type="submit" class="btn btn-dark" >
+      execute
+  </button>
+      <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#SupplierStorage">
+      show
+  </button>
+</div>
+
+<div class="modal fade" id="SupplierStorage" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="{{true}}">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="SupplierStoragetitle">Отчет</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+            <table class="table table-bordered table-sm">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">Product Name</th>
+        <th scope="col">Supplier Name</th>
+        <th scope="col">Production Date</th>
+          <th scope="col">Expiry Date</th>
+          <th scope="col">Quantity</th>
+        </tr>
+
+    </thead>
+    <tbody>
+            <tr>
+                <td>{{ supplier_storage.pname }}</td>
+                <td>{{ supplier_storage.sname }}</td>
+                <td>{{ supplier_storage.pdate }}</td>
+                <td>{{ supplier_storage.edate }}</td>
+                <td>{{ supplier_storage.qtt }}</td>
+            </tr>
+    </tbody>
+</table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+       </div>
+</form>
+    <br><br><br>
+
+
+        <p class="h6">Show vegetables and species amount of supplier</p>
+        <form class="form-inline" method="POST">
+  <div class="form-group">
+ <div class="input-group">
+  <select class="custom-select" id="supplier", name="supplier">
+      <option value="choose" >Choose...</option>
+      {% for supplier in suppliers %}
+      <option value="{{supplier.name}}" >{{supplier.name}}</option>
+      {% endfor %}
+  </select>
+  <div class="input-group-append">
+  <button type="submit" class="btn btn-dark" >
+      execute
+  </button>
+      <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#SupplierVeg">
+      show
+  </button>
+</div>
+
+<div class="modal fade" id="SupplierVeg" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="{{true}}">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="SupplierVegtitle">Отчет</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Total amount: {{veg_amount}}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+       </div>
+</form>
+    <br><br><br>
+
+    <p class="h6">Show Product Details</p>
+        <form class="form-inline" method="POST">
+  <div class="form-group">
+ <div class="input-group">
+  <select class="custom-select" id="productd", name="productd">
+      <option value="choose" >Choose...</option>
+      {% for product in products %}
+      <option value="{{product.name}}" >{{product.name}}</option>
+      {% endfor %}
+  </select>
+  <div class="input-group-append">
+  <button type="submit" class="btn btn-dark" >
+      execute
+  </button>
+      <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#Productdm">
+      show
+  </button>
+</div>
+
+<div class="modal fade" id="Productdm" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="{{true}}">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="Productdmt">Отчет</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+            <table class="table table-bordered table-sm">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">Product Name</th>
+        <th scope="col">Category</th>
+        <th scope="col">Price</th>
+          <th scope="col">Supplier Name</th>
+          <th scope="col">Supplier Rate</th>
+        </tr>
+
+    </thead>
+    <tbody>
+            <tr>
+                <td>{{ productd.pname }}</td>
+                <td>{{ productd.cat }}</td>
+                <td>{{ productd.price }}</td>
+                <td>{{ productd.sname }}</td>
+                <td>{{ productd.rate }}</td>
+            </tr>
+    </tbody>
+</table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+       </div>
+</form>
+    <br><br><br>
+
+      <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#maxrate">
+      Show max rate of suppliers
+  </button>
+
+
+<div class="modal fade" id="maxrate" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="maxratet">Отчет</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        maxrate: {{maxrate}}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+   <div class="container"></div>
+    <div class="d-flex align-items-end justify-content-end">
+        <div>
+            <a class="btn btn-dark" href="tables">To Tables</a>
+        </div>
+    </div>
+
+
