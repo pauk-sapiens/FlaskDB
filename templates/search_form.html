@@ -5,30 +5,45 @@
 	src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" >
 	</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-<p class="h4">Products</p>
+
+    <form class="form-inline" method="POST">
+  <div class="form-group">
+ <div class="input-group">
+  <select class="custom-select" id="name", name="name">z
+      {% for employee in employees %}
+      <option value="{{employee.name}}" >{{employee.name}}</option>
+      {% endfor %}
+  </select>
+  <div class="input-group-append">
+    <button class="btn btn-outline-secondary" type="submit">find</button>
+  </div>
+</div>
+       </div>
+</form>
+
+    <p class="h4">Dishes of Employee</p>
     <table class="table table-bordered">
     <thead class="thead-dark">
         <tr>
-        <th scope="col">Name</th>
-            <th scope="col">Price</th>
-        <th scope="col">Supplier Name</th>
-            <th scope="col">Storage №</th>
+        <th scope="col">Employee Name</th>
+        <th scope="col">Employee Age</th>
+            <th scope="col">Dish Name</th>
+            <th scope="col">Dish Type</th>
         </tr>
     </thead>
     <tbody>
-        {% for product in products %}
+        {% for reso in res %}
             <tr>
-                <td>{{product.name }}</td>
-                <td>{{ product.price }}</td>
-                <td>{{ product.supplier_id }}</td>
-                <td>{{ product.storage_id }}</td>
+                <td>{{reso.ename }}</td>
+                <td>{{ reso.age }}</td>
+                <td>{{ reso.dname }}</td>
+                <td>{{ reso.dt }}</td>
             </tr>
         {% endfor %}
     </tbody>
+
 </table>
-    <a class="btn btn-dark" href="add_product">Add New Product</a>
-    <a class="btn btn-dark" href="delete_product">Delete Product</a>
-    <a class="btn btn-dark" href="update_product">Update Product</a>
+
    <div class="container"></div>
     <div class="d-flex align-items-end justify-content-end">
         <div>

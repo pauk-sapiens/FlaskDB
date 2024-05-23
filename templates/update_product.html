@@ -17,9 +17,13 @@
     <form action="" method = "POST">
         <div class="form-group row">
             <label for="name">Product Name</label>
-            <input type="text" class="form-control" name="name" id="name">
+                                      <select class="custom-select" id="name", name="name">
+                  <option value="..." >...</option>
+      {% for product in products %}
+      <option value="{{product}}" >{{product}}</option>
+      {% endfor %}
+  </select>
         </div>
-
 
         <div class="form-group row">
             <label for="price">Product Price</label>
@@ -28,7 +32,7 @@
 
                 <div class="form-group row">
             <label for="supplier_id">Supplier Name</label>
-                    <select class="custom-select" id="supplier_id", name="supplier_id">
+                <select class="custom-select" id="supplier_id", name="supplier_id">
               <option value="..." >...</option>
       {% for supplier in suppliers %}
       <option value="{{supplier}}" >{{supplier}}</option>
@@ -37,7 +41,7 @@
                     </div>
         <div class="form-group row">
             <label for="storage_id">Storage №</label>
-                      <select class="custom-select" id="storage_id", name="storage_id">
+            <select class="custom-select" id="storage_id", name="storage_id">
               <option value="..." >...</option>
       {% for storage in storages %}
       <option value="{{storage}}" >{{storage}}</option>

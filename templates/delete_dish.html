@@ -16,7 +16,12 @@
     <form action="" method = "POST">
         <div class="form-group row">
             <label for="name">Dish Name</label>
-            <input type="text" class="form-control" name="name" id="name">
+            <select class="custom-select" id="name", name="name">
+                  <option value="..." >...</option>
+      {% for dish in dishs %}
+      <option value="{{dish}}" >{{dish}}</option>
+      {% endfor %}
+  </select>
         </div>
         <button type="btnAdd" class="btn btn-dark btn-sm" >Submit</button>
         <a href="/dishes" class="btn btn-dark btn-sm">Cancel</a>

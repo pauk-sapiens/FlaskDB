@@ -16,7 +16,12 @@
     <form action="" method = "POST">
         <div class="form-group row">
             <label for="id">Employee Name</label>
-            <input type="text" class="form-control" name="id" id="id">
+                          <select class="custom-select" id="id", name="id">
+                  <option value="..." >...</option>
+      {% for employee in employees %}
+      <option value="{{employee}}" >{{employee}}</option>
+      {% endfor %}
+  </select>
         </div>
         <button type="btnAdd" class="btn btn-dark btn-sm" >Submit</button>
         <a href="/employee" class="btn btn-dark btn-sm">Cancel</a>

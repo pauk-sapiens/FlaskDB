@@ -18,7 +18,12 @@
 
         <div class="form-group row">
             <label for="name">Supplier Name</label>
-            <input type="text" class="form-control" name="name" id="name">
+                            <select class="custom-select" id="name", name="name">
+              <option value="..." >...</option>
+      {% for supplier in suppliers %}
+      <option value="{{supplier}}" >{{supplier}}</option>
+      {% endfor %}
+  </select>
         </div>
         <div class="form-group row">
             <label for="contact">Supplier Contacts</label>
@@ -26,7 +31,7 @@
         </div>
         <div class="form-group row">
             <label for="rate">Supplier Rate</label>
-                       <select class="custom-select" id="rate", name="rate">
+            <select class="custom-select" id="rate", name="rate">
               <option value="..." >...</option>
                  <option value="1" >1</option>
                  <option value="2" >2</option>
@@ -48,3 +53,12 @@
       {% endif %}
       </form>
 </body>
+
+
+
+
+
+
+
+
+

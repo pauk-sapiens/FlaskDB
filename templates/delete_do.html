@@ -16,11 +16,21 @@
     <form action="" method = "POST">
         <div class="form-group row">
             <label for="id">Dish Name</label>
-            <input type="text" class="form-control" name="id" id="id">
+                        <select class="custom-select" id="id", name="id">
+                  <option value="..." >...</option>
+      {% for dish in dishes %}
+      <option value="{{dish}}" >{{dish}}</option>
+      {% endfor %}
+  </select>
         </div>
         <div class="form-group row">
             <label for="product_id">Order №</label>
-            <input type="text" class="form-control" name="product_id" id="product_id">
+                        <select class="custom-select" id="product_id", name="product_id">
+                  <option value="..." >...</option>
+      {% for order in orders %}
+      <option value="{{order}}" >{{order}}</option>
+      {% endfor %}
+  </select>
         </div>
         <button type="btnAdd" class="btn btn-dark btn-sm" >Submit</button>
         <a href="/diary_orders" class="btn btn-dark btn-sm">Cancel</a>

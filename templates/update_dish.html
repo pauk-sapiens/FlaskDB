@@ -18,7 +18,12 @@
 
         <div class="form-group row">
             <label for="name">Dish Name</label>
-            <input type="text" class="form-control" name="name" id="name">
+            <select class="custom-select" id="name", name="name">
+                  <option value="..." >...</option>
+      {% for dish in dishs %}
+      <option value="{{dish}}" >{{dish}}</option>
+      {% endfor %}
+  </select>
         </div>
         <div class="form-group row">
             <label for="price">Dish Pricer</label>
@@ -26,7 +31,7 @@
         </div>
         <div class="form-group row">
             <label for="type">Dish Type</label>
-              <select class="custom-select" id="type", name="type">
+                          <select class="custom-select" id="type", name="type">
                   <option value="..." >...</option>
         <option value="гарниры" >гарниры</option>
                   <option value="супы" >супы</option>

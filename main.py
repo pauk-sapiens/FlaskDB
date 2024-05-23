@@ -182,18 +182,18 @@ def add_dish():
 def update_dish():
     if session.get('username') == 'admin':
         err = None
+        names = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from dishes')
+        for row in cursor.fetchall():
+            names.add(row[1])
         if request.method == 'GET':
-            return render_template('add_dish.html', error=err)
+            return render_template('update_dish.html', error=err, dishs=names)
         if request.method == 'POST':
             name = request.form["name"]
             price = request.form["price"]
             type = request.form["type"]
-            names = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from dishes')
-            for row in cursor.fetchall():
-                names.add(row[1])
             if name in names and validate_string(name) and validate_string(type) and validate_num(price):
                 price = float(price)
                 cursor.execute(f"update dishes set cost_price = {price}, type_dish = '{type}' where name ='{name}'")
@@ -203,7 +203,7 @@ def update_dish():
             elif name not in names:
                 err = "Dish Does Not Exist"
                 conn.close()
-                return render_template('add_dish.html', error=err)
+                return render_template('update_dish.html', error=err, dishs=names)
             else:
                 err = 'Invalid Values: '
                 if not validate_num(price):
@@ -212,7 +212,7 @@ def update_dish():
                     err += ' type'
                 if not validate_string(name):
                     err += ' name'
-            return render_template('add_dish.html', error=err)
+            return render_template('update_dish.html', error=err, dishs=names)
     return 'вы не авторизованы'
 
 
@@ -220,17 +220,20 @@ def update_dish():
 def delete_dish():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from dishes')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
         if request.method == 'GET':
-            return render_template('delete_dish.html', error=err)
+            return render_template('delete_dish.html', error=err, dishs=ids)
         if request.method == 'POST':
             name = request.form["name"]
-            ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from dishes')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
             if name in ids and validate_string(name):
+                cursor.execute("select dish_id FROM dishes WHERE name = ?", name)
+                dish_id = int(cursor.fetchone()[0])
+                cursor.execute("DELETE FROM employee_dishes WHERE dish_id = ?", dish_id)
                 cursor.execute("DELETE FROM dishes WHERE name = ?", name)
                 conn.commit()
                 conn.close()
@@ -239,7 +242,7 @@ def delete_dish():
                 err = 'No Such Dish'
                 conn.commit()
                 conn.close()
-            return render_template('delete_dish.html', error=err)
+            return render_template('delete_dish.html', error=err, dishs=ids)
     return 'вы не авторизованы'
 
 
@@ -269,7 +272,6 @@ def add_order():
             id = request.form['id']
             date = request.form["date"]
             status = request.form["status"]
-            price = request.form["price"]
             payment = request.form['payment']
             ids = set()
             m = set()
@@ -279,10 +281,9 @@ def add_order():
             for row in cursor.fetchall():
                 ids.add(str(row[5]))
                 m.add(row[0])
-            if validate_id(id) and id not in ids and validate_string(status) and validate_string(payment) and validate_num(price)  and validate_date(date):
-                price = float(price)
+            if validate_id(id) and id not in ids and validate_string(status) and validate_string(payment) and validate_date(date):
                 id = int(id)
-                cursor.execute("INSERT INTO orders VALUES (?, ?, ?, ?, ?, ?)",max(m)+1 , date, status, price, payment, id)
+                cursor.execute("INSERT INTO orders VALUES (?, ?, ?, ?, ?, ?)",max(m)+1 , date, status,0, payment, id)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('orders'))
@@ -298,8 +299,6 @@ def add_order():
                     err += 'date '
                 if not validate_string(status):
                     err += 'status '
-                if not validate_num(price):
-                    err += 'price '
                 if not validate_string(payment):
                     err += 'payment'
             return render_template('add_order.html', error=err)
@@ -310,16 +309,17 @@ def add_order():
 def delete_order():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from orders')
+        for row in cursor.fetchall():
+            ids.add(str(row[5]))
         if request.method == 'GET':
-            return render_template('delete_order.html', error=err)
+            return render_template('delete_order.html', error=err, orders=ids)
         if request.method == 'POST':
             id = request.form["id"]
-            ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from orders')
-            for row in cursor.fetchall():
-                ids.add(str(row[5]))
+
             if id in ids and validate_id(id):
                 id = int(id)
                 cursor.execute("DELETE FROM orders WHERE order_number = ?", id)
@@ -330,7 +330,7 @@ def delete_order():
                 err = 'No Such Order'
                 conn.commit()
                 conn.close()
-            return render_template('delete_order.html', error=err)
+            return render_template('delete_order.html', error=err, orders=ids)
     return 'вы не авторизованы'
 
 
@@ -338,31 +338,31 @@ def delete_order():
 def update_order():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from orders')
+        for row in cursor.fetchall():
+            ids.add(str(row[5]))
         if request.method == 'GET':
-            return render_template('add_order.html', error=err)
+            return render_template('update_order.html', error=err, orders=ids)
         if request.method == 'POST':
             id = request.form['id']
             date = request.form["date"]
             status = request.form["status"]
-            price = request.form["price"]
+            price = '10'
             payment = request.form['payment']
-            ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from orders')
-            for row in cursor.fetchall():
-                ids.add(str(row[5]))
             if id in ids and validate_string(status) and validate_string(payment) and validate_num(price) and validate_id(id) and validate_date(date):
                 price = float(price)
                 id = int(id)
-                cursor.execute(f"update orders set payment_type = '{payment}', date = '{date}', total_amount = {price}, status = '{status}' where order_number = '{id}'")
+                cursor.execute(f"update orders set payment_type = '{payment}', date = '{date}', status = '{status}' where order_number = '{id}'")
                 conn.commit()
                 conn.close()
                 return redirect(url_for('orders'))
             elif id not in ids:
                 err = 'Order does not exist'
                 conn.close()
-                return render_template('add_order.html', error=err)
+                return render_template('update_order.html', error=err, orders=ids)
             else:
                 err = 'Invalid Values: '
                 if not validate_id(id):
@@ -375,7 +375,7 @@ def update_order():
                     err += 'price '
                 if not validate_string(payment):
                     err += 'payment'
-            return render_template('add_order.html', error=err)
+            return render_template('update_order.html', error=err, orders=ids)
     return 'вы не авторизованы'
 
 
@@ -404,30 +404,30 @@ def employee():
 def add_employee():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        order_ids = set()
+        type_ids = set()
+        m = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from employee')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
+            m.add(row[0])
+        cursor.execute('select * from orders')
+        for row in cursor.fetchall():
+            order_ids.add(str(row[5]))
+        cursor.execute('select * from type_employee')
+        for row in cursor.fetchall():
+            type_ids.add(str(row[1]))
         if request.method == 'GET':
-            return render_template('add_employee.html', error=err)
+            return render_template('add_employee.html', error=err, orders=order_ids, employees=ids, tis=type_ids)
         if request.method == 'POST':
             name = request.form["name"]
             age = request.form["age"]
             order_id = request.form["order_id"]
-            role = request.form['role']
+            role = 'челик'
             type_id = request.form['type_id']
-            ids = set()
-            order_ids = set()
-            type_ids = set()
-            m = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from employee')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
-                m.add(row[0])
-            cursor.execute('select * from orders')
-            for row in cursor.fetchall():
-                order_ids.add(str(row[5]))
-            cursor.execute('select * from type_employee')
-            for row in cursor.fetchall():
-                type_ids.add(str(row[1]))
             if validate_string(name) and name not in ids and type_id in type_ids and order_id in order_ids and validate_string(role) and validate_num(age) and validate_id(order_id) and validate_string(type_id):
                 age = int(age)
                 cursor.execute('select order_id from orders where order_number = ?', order_id)
@@ -436,22 +436,22 @@ def add_employee():
                 cursor.execute('select type_employee_id from type_employee where type_name = ?', type_id)
                 type_ins = cursor.fetchone()[0]
                 type_ins = int(type_ins)
-                cursor.execute("INSERT INTO employee VALUES (?, ?, ?, ?, ?, ?)", max(m)+1, name, age, order_ins, role, type_ins)
+                cursor.execute("INSERT INTO View_Employee_flask VALUES (?, ?, ?, ?, ?, ?)", max(m)+1, name, age, order_ins, role, type_ins)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('employee'))
             elif name in ids:
                 err = 'Employee already exists'
                 conn.close()
-                return render_template('add_employee.html', error=err)
+                return render_template('add_employee.html', error=err, orders=order_ids, employees=ids, tis=type_ids)
             elif order_id not in order_ids:
                 err = 'Order № does not exist'
                 conn.close()
-                return render_template('add_employee.html', error=err)
+                return render_template('add_employee.html', error=err, orders=order_ids, employees=ids, tis=type_ids)
             elif type_id not in type_ids:
                 err = 'Employee Type does not exist'
                 conn.close()
-                return render_template('add_employee.html', error=err)
+                return render_template('add_employee.html', error=err, orders=order_ids, employees=ids, tis=type_ids)
             else:
                 err = 'Invalid Values: '
                 if not validate_string(name):
@@ -464,7 +464,7 @@ def add_employee():
                     err += 'order № '
                 if not validate_string(type_id):
                     err += 'employee type'
-            return render_template('add_employee.html', error=err)
+            return render_template('add_employee.html', error=err, orders=order_ids, employees=ids, tis=type_ids)
     return 'вы не авторизованы'
 
 
@@ -472,30 +472,30 @@ def add_employee():
 def update_employee():
     if session.get('username') == 'admin':
         err = None
+        ids = []
+        order_ids = []
+        type_ids = set()
+        m = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from employee')
+        for row in cursor.fetchall():
+            ids.append(str(row[1]))
+            m.add(row[0])
+        cursor.execute('select * from orders')
+        for row in cursor.fetchall():
+            order_ids.append(str(row[5]))
+        cursor.execute('select * from type_employee')
+        for row in cursor.fetchall():
+            type_ids.add(str(row[1]))
         if request.method == 'GET':
-            return render_template('add_employee.html', error=err)
+            return render_template('update_employee.html', error=err, orders=order_ids, employees=ids, tis=type_ids)
         if request.method == 'POST':
             name = request.form["name"]
             age = request.form["age"]
             order_id = request.form["order_id"]
-            role = request.form['role']
+            role = 'челик'
             type_id = request.form['type_id']
-            ids = set()
-            order_ids = set()
-            type_ids = set()
-            m = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from employee')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
-                m.add(row[0])
-            cursor.execute('select * from orders')
-            for row in cursor.fetchall():
-                order_ids.add(str(row[5]))
-            cursor.execute('select * from type_employee')
-            for row in cursor.fetchall():
-                type_ids.add(str(row[1]))
             if validate_string(name) and name in ids and type_id in type_ids and order_id in order_ids and validate_string(role) and validate_num(age) and validate_id(order_id) and validate_string(type_id):
                 age = int(age)
                 cursor.execute('select order_id from orders where order_number = ?', order_id)
@@ -504,22 +504,22 @@ def update_employee():
                 cursor.execute('select type_employee_id from type_employee where type_name = ?', type_id)
                 type_ins = cursor.fetchone()[0]
                 type_ins = int(type_ins)
-                cursor.execute(f"update employee set age = {age}, job_role = '{role}', order_id = {order_ins}, type_employee_id = {type_ins} where name = '{name}'")
+                cursor.execute(f"update View_Employee_flask set age = {age}, job_role = '{role}', order_id = {order_ins}, type_employee_id = {type_ins} where name = '{name}'")
                 conn.commit()
                 conn.close()
                 return redirect(url_for('employee'))
             elif name not in ids:
                 err = 'Employee does not exist'
                 conn.close()
-                return render_template('add_employee.html', error=err)
+                return render_template('update_employee.html', error=err, orders=order_ids, employees=ids, tis=type_ids)
             elif order_id not in order_ids:
                 err = 'Order № does not exist'
                 conn.close()
-                return render_template('add_employee.html', error=err)
+                return render_template('update_employee.html', error=err, orders=order_ids, employees=ids, tis=type_ids)
             elif type_id not in type_ids:
                 err = 'Employee Type does not exist'
                 conn.close()
-                return render_template('add_employee.html', error=err)
+                return render_template('update_employee.html', error=err, orders=order_ids, employees=ids, tis=type_ids)
             else:
                 err = 'Invalid Values: '
                 if not validate_string(name):
@@ -532,7 +532,7 @@ def update_employee():
                     err += 'order id'
                 if not validate_string(type_id):
                     err += 'employee type'
-            return render_template('add_employee.html', error=err)
+            return render_template('update_employee.html', error=err, orders=order_ids, employees=ids, tis=type_ids)
     return 'вы не авторизованы'
 
 
@@ -540,18 +540,21 @@ def update_employee():
 def delete_employee():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from employee')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
         if request.method == 'GET':
-            return render_template('delete_employee.html', error=err)
+            return render_template('delete_employee.html', error=err, employees=ids)
         if request.method == 'POST':
             id = request.form["id"]
-            ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from employee')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
             if id in ids and validate_string(id):
-                cursor.execute("DELETE FROM employee WHERE name = ?", id)
+                cursor.execute("select employee_id FROM View_Employee_flask WHERE name = ?", id)
+                emid = cursor.fetchone()[0]
+                cursor.execute("DELETE FROM View_Employee_Dishes_flask  WHERE employee_id = ?", emid)
+                cursor.execute("DELETE FROM View_Employee_flask WHERE name = ?", id)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('employee'))
@@ -559,7 +562,7 @@ def delete_employee():
                 err = 'No Such Employee'
                 conn.commit()
                 conn.close()
-            return render_template('delete_employee.html', error=err)
+            return render_template('delete_employee.html', error=err, employees=ids)
     return 'вы не авторизованы'
 
 
@@ -588,30 +591,30 @@ def products():
 def add_product():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        m = set()
+        supplier_ids = set()
+        storage_ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from products')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
+            m.add(row[0])
+        cursor.execute('select * from suppliers')
+        for row in cursor.fetchall():
+            supplier_ids.add(str(row[1]))
+        cursor.execute('select * from storage')
+        for row in cursor.fetchall():
+            storage_ids.add(str(row[4]))
         if request.method == 'GET':
-            return render_template('add_product.html', error=err)
+            return render_template('add_product.html', error=err, products=ids, suppliers=supplier_ids, storages=storage_ids)
         if request.method == 'POST':
             name = request.form["name"]
-            category = request.form["category"]
             price = request.form["price"]
             supplier_id = request.form['supplier_id']
             storage_id = request.form['storage_id']
-            ids = set()
-            m = set()
-            supplier_ids = set()
-            storage_ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from products')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
-                m.add(row[0])
-            cursor.execute('select * from suppliers')
-            for row in cursor.fetchall():
-                supplier_ids.add(str(row[1]))
-            cursor.execute('select * from storage')
-            for row in cursor.fetchall():
-                storage_ids.add(str(row[4]))
+            category = supplier_id
             if name not in ids and supplier_id in supplier_ids and storage_id in storage_ids and validate_string(name) and validate_string(category) and validate_num(price) and validate_string(supplier_id) and validate_id(storage_id):
                 price = float(price)
                 cursor.execute('select storage_id from storage where storage_number = ?', storage_id)
@@ -620,22 +623,25 @@ def add_product():
                 cursor.execute('select supplier_id from suppliers where name = ?', supplier_id)
                 supplier_ins = cursor.fetchone()[0]
                 supplier_ins = int(supplier_ins)
-                cursor.execute("INSERT INTO products VALUES (?, ?, ?, ?, ?, ?)", max(m)+1, name, category, price, supplier_ins, storage_ins)
+                cursor.execute("INSERT INTO View_Products_flask VALUES (?, ?, ?, ?, ?, ?)", max(m)+1, name, category, price, supplier_ins, storage_ins)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('products'))
             elif name in ids:
                 err = 'Product already exists'
                 conn.close()
-                return render_template('add_product.html', error=err)
+                return render_template('add_product.html', error=err, products=ids, suppliers=supplier_ids,
+                                       storages=storage_ids)
             elif supplier_id not in supplier_ids:
                 err = 'Supplier does not exist'
                 conn.close()
-                return render_template('add_product.html', error=err)
+                return render_template('add_product.html', error=err, products=ids, suppliers=supplier_ids,
+                                       storages=storage_ids)
             elif storage_id not in storage_ids:
                 err = 'Storage does not exist'
                 conn.close()
-                return render_template('add_product.html', error=err)
+                return render_template('add_product.html', error=err, products=ids, suppliers=supplier_ids,
+                                       storages=storage_ids)
             else:
                 err = 'Invalid Values: '
                 if not validate_string(name):
@@ -648,7 +654,7 @@ def add_product():
                     err += 'supplier name'
                 if not validate_id(storage_id):
                     err += 'storage №'
-            return render_template('add_product.html', error=err)
+            return render_template('add_product.html', error=err, products=ids, suppliers=supplier_ids, storages=storage_ids)
     return 'вы не авторизованы'
 
 
@@ -656,30 +662,30 @@ def add_product():
 def update_product():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        m = set()
+        supplier_ids = set()
+        storage_ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from products')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
+            m.add(row[0])
+        cursor.execute('select * from suppliers')
+        for row in cursor.fetchall():
+            supplier_ids.add(str(row[1]))
+        cursor.execute('select * from storage')
+        for row in cursor.fetchall():
+            storage_ids.add(str(row[4]))
         if request.method == 'GET':
-            return render_template('add_product.html', error=err)
+            return render_template('update_product.html', error=err, products=ids, suppliers=supplier_ids, storages=storage_ids)
         if request.method == 'POST':
             name = request.form["name"]
-            category = request.form["category"]
+            category = 'вкусняшка'
             price = request.form["price"]
             supplier_id = request.form['supplier_id']
             storage_id = request.form['storage_id']
-            ids = set()
-            m = set()
-            supplier_ids = set()
-            storage_ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from products')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
-                m.add(row[0])
-            cursor.execute('select * from suppliers')
-            for row in cursor.fetchall():
-                supplier_ids.add(str(row[1]))
-            cursor.execute('select * from storage')
-            for row in cursor.fetchall():
-                storage_ids.add(str(row[4]))
             if name in ids and supplier_id in supplier_ids and storage_id in storage_ids and validate_string(name) and validate_string(category) and validate_num(price) and validate_string(supplier_id) and validate_id(storage_id):
                 price = float(price)
                 cursor.execute('select storage_id from storage where storage_number = ?', storage_id)
@@ -688,22 +694,25 @@ def update_product():
                 cursor.execute('select supplier_id from suppliers where name = ?', supplier_id)
                 supplier_ins = cursor.fetchone()[0]
                 supplier_ins = int(supplier_ins)
-                cursor.execute(f"update products set price = {price}, category = '{category}', supplier_id = {supplier_ins}, storage_id = {storage_ins} where name = '{name}'")
+                cursor.execute(f"update View_Products_flask set price = {price}, category = '{category}', supplier_id = {supplier_ins}, storage_id = {storage_ins} where name = '{name}'")
                 conn.commit()
                 conn.close()
                 return redirect(url_for('products'))
             elif name not in ids:
                 err = 'Product does not exist'
                 conn.close()
-                return render_template('add_product.html', error=err)
+                return render_template('update_product.html', error=err, products=ids, suppliers=supplier_ids,
+                                       storages=storage_ids)
             elif supplier_id not in supplier_ids:
                 err = 'Supplier does not exist'
                 conn.close()
-                return render_template('add_product.html', error=err)
+                return render_template('update_product.html', error=err, products=ids, suppliers=supplier_ids,
+                                       storages=storage_ids)
             elif storage_id not in storage_ids:
                 err = 'Storage does not exist'
                 conn.close()
-                return render_template('add_product.html', error=err)
+                return render_template('update_product.html', error=err, products=ids, suppliers=supplier_ids,
+                                       storages=storage_ids)
             else:
                 err = 'Invalid Values: '
                 if not validate_string(name):
@@ -716,7 +725,7 @@ def update_product():
                     err += 'supplier name '
                 if not validate_id(storage_id):
                     err += 'storage №'
-            return render_template('add_product.html', error=err)
+            return render_template('update_product.html', error=err, products=ids, suppliers=supplier_ids, storages=storage_ids)
     return 'вы не авторизованы'
 
 
@@ -724,19 +733,21 @@ def update_product():
 def delete_product():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from products')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
         if request.method == 'GET':
-            return render_template('delete_product.html', error=err)
+            return render_template('delete_product.html', error=err, products=ids)
         if request.method == 'POST':
             id = request.form["id"]
-            ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from products')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
             if id in ids and validate_string(id):
-                id = int(id)
-                cursor.execute("DELETE FROM products WHERE name = ?", id)
+                cursor.execute('select product_id from products where name = ?', id)
+                pid = cursor.fetchone()[0]
+                cursor.execute('delete from recipes where product_id = ?', pid)
+                cursor.execute("DELETE FROM View_Products_flask WHERE name = ?", id)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('products'))
@@ -744,7 +755,7 @@ def delete_product():
                 err = 'No Such Product'
                 conn.commit()
                 conn.close()
-            return render_template('delete_product.html', error=err)
+            return render_template('delete_product.html', error=err, products=ids)
     return 'вы не авторизованы'
 
 @app.route('/suppliers', methods=['GET'])
@@ -806,28 +817,28 @@ def add_supplier():
 def update_supplier():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from suppliers')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
         if request.method == 'GET':
-            return render_template('add_supplier.html', error=err)
+            return render_template('update_supplier.html', error=err, suppliers=ids)
         if request.method == 'POST':
             name = request.form["name"]
             contact = request.form["contact"]
             rate = request.form["rate"]
-            ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from suppliers')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
             if name in ids and validate_string(name) and validate_contact(contact) and validate_num(rate):
                 rate = int(rate)
-                cursor.execute(f"update suppliers set rating = {rate}, contact_details = '{contact}' where name = '{name}'")
+                cursor.execute(f"update suppliers set rating = ?, contact_details = ? where name = ?", rate, contact, name)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('suppliers'))
             elif name not in ids:
                 err = "Supplier Does Not Exist"
                 conn.close()
-                return render_template('add_supplier.html', error=err)
+                return render_template('update_supplier.html', error=err, suppliers=ids)
             else:
                 err = 'Invalid Values: '
                 if not validate_string(name):
@@ -836,7 +847,7 @@ def update_supplier():
                     err += ' contact'
                 if not validate_num(rate):
                     err += ' rate'
-            return render_template('add_supplier.html', error=err)
+            return render_template('update_supplier.html', error=err, suppliers=ids)
     return 'вы не авторизованы'
 
 
@@ -844,17 +855,25 @@ def update_supplier():
 def delete_supplier():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from suppliers')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
         if request.method == 'GET':
-            return render_template('delete_supplier.html', error=err)
+            return render_template('delete_supplier.html', error=err, suppliers=ids)
         if request.method == 'POST':
             id = request.form["id"]
-            ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from suppliers')
-            for row in cursor.fetchall():
-                ids.add(str(row[0]))
             if id in ids and validate_string(id):
+                cursor.execute("select supplier_id FROM suppliers WHERE name = ?", id)
+                sid = cursor.fetchone()[0]
+                cursor.execute('select product_id from products where supplier_id = ?', sid)
+                res = cursor.fetchall()
+                if res:
+                    for pid1 in res:
+                        cursor.execute('delete from recipes where product_id = ?', pid1)
+                cursor.execute("DELETE FROM products WHERE supplier_id = ?", sid)
                 cursor.execute("DELETE FROM suppliers WHERE name = ?", id)
                 conn.commit()
                 conn.close()
@@ -863,7 +882,7 @@ def delete_supplier():
                 err = 'No Such Supplier'
                 conn.commit()
                 conn.close()
-            return render_template('delete_supplier.html', error=err)
+            return render_template('delete_supplier.html', error=err, suppliers=ids)
     return 'вы не авторизованы'
 
 
@@ -931,19 +950,19 @@ def add_storage():
 def update_storage():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from storage')
+        for row in cursor.fetchall():
+            ids.add(str(row[4]))
         if request.method == 'GET':
-            return render_template('add_storage.html', error=err)
+            return render_template('update_storage.html', error=err, storages=ids)
         if request.method == 'POST':
             id = request.form["id"]
             date = request.form["date"]
             exdate = request.form["exdate"]
             qtt = request.form["qtt"]
-            ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from storage')
-            for row in cursor.fetchall():
-                ids.add(str(row[4]))
             if id in ids and validate_date(date) and validate_date(exdate) and validate_num(qtt) and validate_id(id):
                 qtt = int(qtt)
                 id = int(id)
@@ -954,7 +973,7 @@ def update_storage():
             elif id not in ids:
                 err = "Storage Does Not Exist"
                 conn.close()
-                return render_template('add_storage.html', error=err)
+                return render_template('update_storage.html', error=err, storages=ids)
             else:
                 err = 'Invalid Values: '
                 if not validate_id(id):
@@ -965,7 +984,7 @@ def update_storage():
                     err += ' exdate'
                 if not validate_num(qtt):
                     err += ' quantity'
-            return render_template('add_storage.html', error=err)
+            return render_template('update_storage.html', error=err, storages=ids)
     return 'вы не авторизованы'
 
 
@@ -973,18 +992,26 @@ def update_storage():
 def delete_storage():
     if session.get('username') == 'admin':
         err = None
+        ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from storage')
+        for row in cursor.fetchall():
+            ids.add(str(row[4]))
         if request.method == 'GET':
-            return render_template('delete_storage.html', error=err)
+            return render_template('delete_storage.html', error=err, storages=ids)
         if request.method == 'POST':
             id = request.form["id"]
-            ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from storage')
-            for row in cursor.fetchall():
-                ids.add(str(row[4]))
             if id in ids and validate_id(id):
                 id = int(id)
+                cursor.execute("select storage_id FROM storage WHERE storage_number = ?", id)
+                sid = cursor.fetchone()[0]
+                cursor.execute('select product_id from products where storage_id = ?', sid)
+                res = cursor.fetchall()
+                if res:
+                    for pid1 in res:
+                        cursor.execute('delete from recipes where product_id = ?', pid1)
+                cursor.execute("DELETE FROM products WHERE storage_id = ?", sid)
                 cursor.execute("DELETE FROM storage WHERE storage_number = ?", id)
                 conn.commit()
                 conn.close()
@@ -993,7 +1020,7 @@ def delete_storage():
                 err = 'No Such Storage'
                 conn.commit()
                 conn.close()
-            return render_template('delete_storage.html', error=err)
+            return render_template('delete_storage.html', error=err, storages=ids)
     return 'вы не авторизованы'
 
 
@@ -1027,31 +1054,31 @@ def recipes():
 def add_recipe():
     if session.get('username') == 'admin':
         err = None
+        pks = []
+        ids = set()
+        product_ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from dishes')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
+        cursor.execute('select * from products')
+        for row in cursor.fetchall():
+            product_ids.add(str(row[1]))
+        cursor.execute('select * from recipes')
+        for row in cursor.fetchall():
+            pks.append([row[0], row[1]])
+        for i in range(len(pks)):
+            cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
+            pks[i][0] = cursor.fetchone()[0]
+            cursor.execute('select name from products where product_id = ?', pks[i][1])
+            pks[i][1] = cursor.fetchone()[0]
         if request.method == 'GET':
-            return render_template('add_recipe.html', error=err)
+            return render_template('update_recipe.html', error=err, dishes=ids,products=product_ids)
         if request.method == 'POST':
             id = request.form['id']
             product_id = request.form['product_id']
             qtt = request.form["qtt"]
-            pks = []
-            ids = set()
-            product_ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from dishes')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
-            cursor.execute('select * from products')
-            for row in cursor.fetchall():
-                product_ids.add(str(row[1]))
-            cursor.execute('select * from recipes')
-            for row in cursor.fetchall():
-                pks.append([row[0], row[1]])
-            for i in range(len(pks)):
-                cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
-                pks[i][0] = cursor.fetchone()[0]
-                cursor.execute('select name from products where product_id = ?', pks[i][1])
-                pks[i][1] = cursor.fetchone()[0]
             pk = [id, product_id]
             if pk not in pks and validate_string(id) and id in ids and product_id in product_ids and validate_num(qtt) and validate_string(product_id):
                 qtt = int(qtt)
@@ -1068,15 +1095,15 @@ def add_recipe():
             elif id not in ids:
                 err = 'Dish does not exist'
                 conn.close()
-                return render_template('add_recipe.html', error=err)
+                return render_template('update_recipe.html', error=err, dishes=ids, products=product_ids)
             elif product_id not in product_ids:
                 err = 'Product does not exist'
                 conn.close()
-                return render_template('add_recipe.html', error=err)
+                return render_template('update_recipe.html', error=err, dishes=ids, products=product_ids)
             elif pk in pks:
                 err = 'Recipe already exists'
                 conn.close()
-                return render_template('add_recipe.html', error=err)
+                return render_template('update_recipe.html', error=err, dishes=ids, products=product_ids)
             else:
                 err = 'Invalid Values: '
                 if not validate_string(id):
@@ -1085,7 +1112,7 @@ def add_recipe():
                     err += 'quantity '
                 if not validate_string(product_id):
                     err += 'product name'
-            return render_template('add_recipe.html', error=err)
+            return render_template('update_recipe.html', error=err, dishes=ids,products=product_ids)
     return 'вы не авторизованы'
 
 
@@ -1093,31 +1120,37 @@ def add_recipe():
 def update_recipe():
     if session.get('username') == 'admin':
         err = None
+        pks = []
+        sdish = set()
+        sprod = set()
+        ids = set()
+        product_ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from dishes')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
+        cursor.execute('select * from products')
+        for row in cursor.fetchall():
+            product_ids.add(str(row[1]))
+        cursor.execute('select * from recipes')
+        for row in cursor.fetchall():
+            pks.append([row[0], row[1]])
+        for i in range(len(pks)):
+            cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
+            ds = cursor.fetchone()[0]
+            pks[i][0] = ds
+            sdish.add(ds)
+            cursor.execute('select name from products where product_id = ?', pks[i][1])
+            ds = cursor.fetchone()[0]
+            pks[i][1] = ds
+            sprod.add(ds)
         if request.method == 'GET':
-            return render_template('add_recipe.html', error=err)
+            return render_template('update_recipe.html', error=err, dishes=sdish,products=sprod)
         if request.method == 'POST':
             id = request.form['id']
             product_id = request.form['product_id']
             qtt = request.form["qtt"]
-            pks = []
-            ids = set()
-            product_ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from dishes')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
-            cursor.execute('select * from products')
-            for row in cursor.fetchall():
-                product_ids.add(str(row[1]))
-            cursor.execute('select * from recipes')
-            for row in cursor.fetchall():
-                pks.append([row[0], row[1]])
-            for i in range(len(pks)):
-                cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
-                pks[i][0] = cursor.fetchone()[0]
-                cursor.execute('select name from products where product_id = ?', pks[i][1])
-                pks[i][1] = cursor.fetchone()[0]
             pk = [id, product_id]
             if pk in pks and validate_string(id) and id in ids and product_id in product_ids and validate_num(
                     qtt) and validate_string(product_id):
@@ -1135,15 +1168,15 @@ def update_recipe():
             elif id not in ids:
                 err = 'Dish does not exist'
                 conn.close()
-                return render_template('add_recipe.html', error=err)
+                return render_template('update_recipe.html', error=err, dishes=sdish, products=sprod)
             elif product_id not in product_ids:
                 err = 'Product does not exist'
                 conn.close()
-                return render_template('add_recipe.html', error=err)
+                return render_template('update_recipe.html', error=err, dishes=sdish, products=sprod)
             elif pk not in pks:
                 err = 'Recipe does not exist'
                 conn.close()
-                return render_template('add_recipe.html', error=err)
+                return render_template('update_recipe.html', error=err, dishes=sdish, products=sprod)
             else:
                 err = 'Invalid Values: '
                 if not validate_string(id):
@@ -1152,7 +1185,7 @@ def update_recipe():
                     err += 'quantity '
                 if not validate_string(product_id):
                     err += 'product name'
-            return render_template('add_recipe.html', error=err)
+            return render_template('update_recipe.html', error=err, dishes=sdish,products=sprod)
     return 'вы не авторизованы'
 
 
@@ -1160,22 +1193,28 @@ def update_recipe():
 def delete_recipe():
     if session.get('username') == 'admin':
         err = None
+        pks = []
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from recipes')
+        dishes = set()
+        products = set()
+        for row in cursor.fetchall():
+            pks.append([row[0], row[1]])
+        for i in range(len(pks)):
+            cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
+            ds = cursor.fetchone()[0]
+            pks[i][0] = ds
+            dishes.add(ds)
+            cursor.execute('select name from products where product_id = ?', pks[i][1])
+            ps = cursor.fetchone()[0]
+            pks[i][1] = ps
+            products.add(ps)
         if request.method == 'GET':
-            return render_template('delete_recipe.html', error=err)
+            return render_template('delete_recipe.html', error=err, dishes=dishes, products=products)
         if request.method == 'POST':
             id = request.form['id']
             product_id = request.form['product_id']
-            pks = []
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from recipes')
-            for row in cursor.fetchall():
-                pks.append([row[0], row[1]])
-            for i in range(len(pks)):
-                cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
-                pks[i][0] = cursor.fetchone()[0]
-                cursor.execute('select name from products where product_id = ?', pks[i][1])
-                pks[i][1] = cursor.fetchone()[0]
             pk = [id, product_id]
             if pk in pks and validate_string(id) and validate_string(product_id):
                 cursor.execute('select dish_id from dishes where name = ?', id)
@@ -1192,7 +1231,7 @@ def delete_recipe():
                 err = 'No Such Recipe'
                 conn.commit()
                 conn.close()
-            return render_template('delete_recipe.html', error=err)
+            return render_template('delete_recipe.html', error=err, dishes=dishes, products=products)
     return 'вы не авторизованы'
 
 
@@ -1226,31 +1265,31 @@ def diary_orders():
 def add_do():
     if session.get('username') == 'admin':
         err = None
+        pks = []
+        ids = set()
+        product_ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from dishes')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
+        cursor.execute('select * from orders')
+        for row in cursor.fetchall():
+            product_ids.add(str(row[5]))
+        cursor.execute('select * from diary_orders')
+        for row in cursor.fetchall():
+            pks.append([row[0], row[1]])
+        for i in range(len(pks)):
+            cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
+            pks[i][0] = cursor.fetchone()[0]
+            cursor.execute('select order_number from orders where order_id = ?', pks[i][1])
+            pks[i][1] = str(cursor.fetchone()[0])
         if request.method == 'GET':
-            return render_template('add_do.html', error=err)
+            return render_template('add_do.html', error=err, dishes=ids, orders=product_ids)
         if request.method == 'POST':
             id = request.form['id']
             product_id = request.form['product_id']
             qtt = request.form["qtt"]
-            pks = []
-            ids = set()
-            product_ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from dishes')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
-            cursor.execute('select * from orders')
-            for row in cursor.fetchall():
-                product_ids.add(str(row[5]))
-            cursor.execute('select * from diary_orders')
-            for row in cursor.fetchall():
-                pks.append([row[0], row[1]])
-            for i in range(len(pks)):
-                cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
-                pks[i][0] = cursor.fetchone()[0]
-                cursor.execute('select order_number from orders where order_id = ?', pks[i][1])
-                pks[i][1] = str(cursor.fetchone()[0])
             pk = [id, product_id]
             if pk not in pks and validate_string(id) and id in ids and product_id in product_ids and validate_num(
                     qtt) and validate_id(product_id):
@@ -1261,22 +1300,28 @@ def add_do():
                 cursor.execute('select order_id from orders where order_number = ?', product_id)
                 product_ins = cursor.fetchone()[0]
                 product_ins = int(product_ins)
-                cursor.execute("INSERT INTO diary_orders VALUES (?, ?, ?)", id_ins, product_ins, qtt)
+                cursor.execute("select total_amount from orders where order_id = ?", product_ins)
+                pred_amount = cursor.fetchone()[0]
+                cursor.execute("INSERT INTO View_Diary_Orders_flask VALUES (?, ?, ?)", id_ins, product_ins, qtt)
+                cursor.execute("select sum(cost_price*quantity) from dishes join diary_orders on dishes.dish_id = diary_orders.dish_id where diary_orders.order_id = ?", product_ins)
+                res = cursor.fetchone()[0]
+                pred_amount += res
+                cursor.execute('update orders set total_amount = ? where order_id =?', pred_amount, product_ins)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('diary_orders'))
             elif id not in ids:
                 err = 'Dish does not exist'
                 conn.close()
-                return render_template('add_do.html', error=err)
+                return render_template('add_do.html', error=err, dishes=ids, orders=product_ids)
             elif product_id not in product_ids:
                 err = 'Order does not exist'
                 conn.close()
-                return render_template('add_do.html', error=err)
+                return render_template('add_do.html', error=err, dishes=ids, orders=product_ids)
             elif pk in pks:
                 err = 'Diary Order already exists'
                 conn.close()
-                return render_template('add_do.html', error=err)
+                return render_template('add_do.html', error=err, dishes=ids, orders=product_ids)
             else:
                 err = 'Invalid Values: '
                 if not validate_string(id):
@@ -1285,7 +1330,7 @@ def add_do():
                     err += 'quantity '
                 if not validate_id(product_id):
                     err += 'order number'
-            return render_template('add_do.html', error=err)
+            return render_template('add_do.html', error=err, dishes=ids, orders=product_ids)
     return 'вы не авторизованы'
 
 
@@ -1293,31 +1338,37 @@ def add_do():
 def update_do():
     if session.get('username') == 'admin':
         err = None
+        pks = []
+        ids = set()
+        product_ids = set()
+        sdish = set()
+        sorders = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from dishes')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
+        cursor.execute('select * from orders')
+        for row in cursor.fetchall():
+            product_ids.add(str(row[5]))
+        cursor.execute('select * from diary_orders')
+        for row in cursor.fetchall():
+            pks.append([row[0], row[1]])
+        for i in range(len(pks)):
+            cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
+            ds = cursor.fetchone()[0]
+            pks[i][0] = ds
+            sdish.add(ds)
+            cursor.execute('select order_number from orders where order_id = ?', pks[i][1])
+            ds = cursor.fetchone()[0]
+            pks[i][1] = str(ds)
+            sorders.add(ds)
         if request.method == 'GET':
-            return render_template('add_do.html', error=err)
+            return render_template('add_do.html', error=err, dishes=sdish, orders=sorders)
         if request.method == 'POST':
             id = request.form['id']
             product_id = request.form['product_id']
             qtt = request.form["qtt"]
-            pks = []
-            ids = set()
-            product_ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from dishes')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
-            cursor.execute('select * from orders')
-            for row in cursor.fetchall():
-                product_ids.add(str(row[5]))
-            cursor.execute('select * from diary_orders')
-            for row in cursor.fetchall():
-                pks.append([row[0], row[1]])
-            for i in range(len(pks)):
-                cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
-                pks[i][0] = cursor.fetchone()[0]
-                cursor.execute('select order_number from orders where order_id = ?', pks[i][1])
-                pks[i][1] = str(cursor.fetchone()[0])
             pk = [id, product_id]
             if pk in pks and validate_string(id) and id in ids and product_id in product_ids and validate_num(
                     qtt) and validate_id(product_id):
@@ -1328,22 +1379,31 @@ def update_do():
                 cursor.execute('select order_id from orders where order_number = ?', product_id)
                 product_ins = cursor.fetchone()[0]
                 product_ins = int(product_ins)
-                cursor.execute("update diary_orders set quantity = ? where dish_id = ? and order_id = ?", qtt, id_ins, product_ins)
+                cursor.execute("select total_amount from orders where order_id = ?", product_ins)
+                pred_amount = cursor.fetchone()[0]
+                cursor.execute("select quantity from diary_orders where dish_id = ? and order_id = ?",id_ins, product_ins)
+                pred_qtt = cursor.fetchone()[0]
+                cursor.execute("update View_Diary_Orders_flask set quantity = ? where dish_id = ? and order_id = ?", qtt, id_ins, product_ins)
+                qtt -= pred_qtt
+                cursor.execute("select cost_price from dishes join diary_orders on dishes.dish_id = diary_orders.dish_id where diary_orders.dish_id = ? and diary_orders.order_id = ?", id_ins, product_ins)
+                multi = cursor.fetchone()[0]
+                print(qtt, pred_amount, multi)
+                cursor.execute('update orders set total_amount =?+?*? where order_id = ?', pred_amount, qtt, multi, product_ins)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('diary_orders'))
             elif id not in ids:
                 err = 'Dish does not exist'
                 conn.close()
-                return render_template('add_do.html', error=err)
+                return render_template('add_do.html', error=err, dishes=sdish, orders=sorders)
             elif product_id not in product_ids:
                 err = 'Order does not exist'
                 conn.close()
-                return render_template('add_do.html', error=err)
+                return render_template('add_do.html', error=err, dishes=sdish, orders=sorders)
             elif pk not in pks:
                 err = 'Diary Order does not exists'
                 conn.close()
-                return render_template('add_do.html', error=err)
+                return render_template('add_do.html', error=err, dishes=sdish, orders=sorders)
             else:
                 err = 'Invalid Values: '
                 if not validate_string(id):
@@ -1352,7 +1412,7 @@ def update_do():
                     err += 'quantity '
                 if not validate_id(product_id):
                     err += 'order number'
-            return render_template('add_do.html', error=err)
+            return render_template('add_do.html', error=err, dishes=sdish, orders=sorders)
     return 'вы не авторизованы'
 
 
@@ -1360,23 +1420,30 @@ def update_do():
 def delete_do():
     if session.get('username') == 'admin':
         err = None
+        pks = []
+        sdish = set()
+        sorder = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from diary_orders')
+        for row in cursor.fetchall():
+            pks.append([row[0], row[1]])
+        for i in range(len(pks)):
+            cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
+            ds = cursor.fetchone()[0]
+            pks[i][0] = ds
+            sdish.add(ds)
+            cursor.execute('select order_number from orders where order_id = ?', pks[i][1])
+            ds = cursor.fetchone()[0]
+            pks[i][1] = str(ds)
+            sorder.add(ds)
         if request.method == 'GET':
-            return render_template('delete_do.html', error=err)
+            return render_template('delete_do.html', error=err, dishes=sdish, orders=sorder)
         if request.method == 'POST':
             id = request.form['id']
             product_id = request.form['product_id']
-            pks = []
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from diary_orders')
-            for row in cursor.fetchall():
-                pks.append([row[0], row[1]])
-            for i in range(len(pks)):
-                cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
-                pks[i][0] = cursor.fetchone()[0]
-                cursor.execute('select order_number from orders where order_id = ?', pks[i][1])
-                pks[i][1] = str(cursor.fetchone()[0])
             pk = [id, product_id]
+            print(pk, pks)
             if pk in pks and validate_string(id) and validate_id(product_id):
                 cursor.execute('select dish_id from dishes where name = ?', id)
                 id_ins = cursor.fetchone()[0]
@@ -1384,7 +1451,16 @@ def delete_do():
                 cursor.execute('select order_id from orders where order_number = ?', product_id)
                 product_ins = cursor.fetchone()[0]
                 product_ins = int(product_ins)
-                cursor.execute("DELETE FROM diary_orders WHERE dish_id = ? and order_id = ?", id_ins, product_ins)
+                cursor.execute("select total_amount from orders where order_id = ?", product_ins)
+                pred_amount = cursor.fetchone()[0]
+                cursor.execute(
+                    "select cost_price from dishes join diary_orders on dishes.dish_id = diary_orders.dish_id where diary_orders.dish_id = ? and diary_orders.order_id = ?",
+                    id_ins, product_ins)
+                multi = cursor.fetchone()[0]
+                cursor.execute('select quantity from diary_orders where dish_id = ? and order_id = ?', id_ins, product_ins)
+                qtt = cursor.fetchone()[0]
+                cursor.execute('update orders set total_amount =?-?*? where order_id = ?', pred_amount, qtt, multi, product_ins)
+                cursor.execute("DELETE FROM View_Diary_Orders_flask WHERE dish_id = ? and order_id = ?", id_ins, product_ins)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('diary_orders'))
@@ -1392,7 +1468,7 @@ def delete_do():
                 err = 'No Such Diary Order'
                 conn.commit()
                 conn.close()
-            return render_template('delete_do.html', error=err)
+            return render_template('delete_do.html', error=err, dishes=sdish, orders=sorder)
 
 @app.route('/type_employee', methods=['GET'])
 def type_employee():
@@ -1458,6 +1534,14 @@ def delete_te():
             for row in cursor.fetchall():
                 ids.add(str(row[1]))
             if name in ids and validate_string(name):
+                cursor.execute('select type_employee_id from type_employee where type_name = ?', name)
+                pid = cursor.fetchone()[0]
+                cursor.execute('select employee_id from employee where type_employee_id = ?', pid)
+                res = cursor.fetchall()
+                if res:
+                    for pid1 in res:
+                        cursor.execute('delete from employee_dishes where employee_id = ?', pid1)
+                cursor.execute('delete from employee where type_employee_id = ?', pid)
                 cursor.execute("DELETE FROM type_employee WHERE type_name = ?", name)
                 conn.commit()
                 conn.close()
@@ -1499,30 +1583,30 @@ def employee_dishes():
 def add_ed():
     if session.get('username') == 'admin':
         err = None
+        pks = []
+        ids = set()
+        product_ids = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from dishes')
+        for row in cursor.fetchall():
+            ids.add(str(row[1]))
+        cursor.execute('select * from employee')
+        for row in cursor.fetchall():
+            product_ids.add(str(row[1]))
+        cursor.execute('select * from employee_dishes')
+        for row in cursor.fetchall():
+            pks.append([row[1], row[0]])
+        for i in range(len(pks)):
+            cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
+            pks[i][0] = cursor.fetchone()[0]
+            cursor.execute('select name from employee where employee_id = ?', pks[i][1])
+            pks[i][1] = cursor.fetchone()[0]
         if request.method == 'GET':
-            return render_template('add_ed.html', error=err)
+            return render_template('add_ed.html', error=err, employees=product_ids, dishes=ids)
         if request.method == 'POST':
             id = request.form['id']
             product_id = request.form['product_id']
-            pks = []
-            ids = set()
-            product_ids = set()
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from dishes')
-            for row in cursor.fetchall():
-                ids.add(str(row[1]))
-            cursor.execute('select * from employee')
-            for row in cursor.fetchall():
-                product_ids.add(str(row[1]))
-            cursor.execute('select * from employee_dishes')
-            for row in cursor.fetchall():
-                pks.append([row[1], row[0]])
-            for i in range(len(pks)):
-                cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
-                pks[i][0] = cursor.fetchone()[0]
-                cursor.execute('select name from employee where employee_id = ?', pks[i][1])
-                pks[i][1] = cursor.fetchone()[0]
             pk = [id, product_id]
             if pk not in pks and validate_string(id) and id in ids and product_id in product_ids and validate_string(product_id):
                 cursor.execute('select dish_id from dishes where name = ?', id)
@@ -1531,29 +1615,29 @@ def add_ed():
                 cursor.execute('select employee_id from employee where name = ?', product_id)
                 product_ins = cursor.fetchone()[0]
                 product_ins = int(product_ins)
-                cursor.execute("INSERT INTO employee_dishes VALUES (?, ?)", product_ins, id_ins)
+                cursor.execute("INSERT INTO View_Employee_Dishes_flask VALUES (?, ?)", product_ins, id_ins)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('employee_dishes'))
             elif id not in ids:
                 err = 'Dish does not exist'
                 conn.close()
-                return render_template('add_ed.html', error=err)
+                return render_template('add_ed.html', error=err, employees=product_ids, dishes=ids)
             elif product_id not in product_ids:
                 err = 'Employee does not exist'
                 conn.close()
-                return render_template('add_ed.html', error=err)
+                return render_template('add_ed.html', error=err, employees=product_ids, dishes=ids)
             elif pk in pks:
                 err = 'Employee dish already exists'
                 conn.close()
-                return render_template('add_ed.html', error=err)
+                return render_template('add_ed.html', error=err, employees=product_ids, dishes=ids)
             else:
                 err = 'Invalid Values: '
                 if not validate_string(id):
                     err += 'dish name '
                 if not validate_string(product_id):
                     err += 'employee name'
-            return render_template('add_ed.html', error=err)
+            return render_template('add_ed.html', error=err, employees=product_ids, dishes=ids)
     return 'вы не авторизованы'
 
 
@@ -1561,22 +1645,28 @@ def add_ed():
 def delete_ed():
     if session.get('username') == 'admin':
         err = None
+        pks = []
+        s1 = set()
+        s2 = set()
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select * from employee_dishes')
+        for row in cursor.fetchall():
+            pks.append([row[1], row[0]])
+        for i in range(len(pks)):
+            cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
+            ds = cursor.fetchone()[0]
+            pks[i][0] = ds
+            s1.add(ds)
+            cursor.execute('select name from employee where employee_id = ?', pks[i][1])
+            ds = cursor.fetchone()[0]
+            pks[i][1] = ds
+            s2.add(ds)
         if request.method == 'GET':
-            return render_template('delete_ed.html', error=err)
+            return render_template('delete_ed.html', error=err, employees=s2, dishes=s1)
         if request.method == 'POST':
             id = request.form['id']
             product_id = request.form['product_id']
-            pks = []
-            conn = connection()
-            cursor = conn.cursor()
-            cursor.execute('select * from employee_dishes')
-            for row in cursor.fetchall():
-                pks.append([row[1], row[0]])
-            for i in range(len(pks)):
-                cursor.execute('select name from dishes where dish_id = ?', pks[i][0])
-                pks[i][0] = cursor.fetchone()[0]
-                cursor.execute('select name from employee where employee_id = ?', pks[i][1])
-                pks[i][1] = cursor.fetchone()[0]
             pk = [id, product_id]
             if pk in pks and validate_string(id) and validate_string(product_id):
                 cursor.execute('select dish_id from dishes where name = ?', id)
@@ -1585,7 +1675,7 @@ def delete_ed():
                 cursor.execute('select employee_id from employee where name = ?', product_id)
                 product_ins = cursor.fetchone()[0]
                 product_ins = int(product_ins)
-                cursor.execute("DELETE FROM employee_dishes WHERE dish_id = ? and employee_id = ?", id_ins, product_ins)
+                cursor.execute("DELETE FROM View_Employee_Dishes_flask WHERE dish_id = ? and employee_id = ?", id_ins, product_ins)
                 conn.commit()
                 conn.close()
                 return redirect(url_for('employee_dishes'))
@@ -1593,7 +1683,7 @@ def delete_ed():
                 err = 'No Such Employee Dish'
                 conn.commit()
                 conn.close()
-            return render_template('delete_ed.html', error=err)
+            return render_template('delete_ed.html', error=err, employees=s2, dishes=s1)
     return 'вы не авторизованы'
 
 @app.route('/supplier_product', methods=['GET', 'POST'])
@@ -1624,7 +1714,7 @@ def supplier_product():
                 for i in range(len(products)):
                     cursor.execute('select storage_number from storage where storage_id = ?', products[i]['storage_id'])
                     products[i]['storage_id'] = cursor.fetchone()[0]
-                    conn.close()
+                conn.close()
                 return render_template('supplier_product.html', products=products, suppliers=suppliers)
             else:
                 err = 'Invalid supplier'
@@ -1721,6 +1811,37 @@ def monitor():
 
         return 'вы не авторизованы'
 
+
+@app.route('/search_form', methods=['GET', 'POST'])
+def search_form():
+    if session.get('username') == 'admin' or session.get('username') == 'user':
+        res = []
+        employees = []
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('select name from employee')
+        err = None
+        for row in cursor.fetchall():
+            employees.append({'name': row[0]})
+        if request.method == 'GET':
+            return render_template('search_form.html', employees=employees, res=res, err=err)
+        if request.method == 'POST':
+            name = request.form.get('name')
+            aut ={'name':name}
+            if validate_string(name) and aut in employees:
+                swap = employees.pop(employees.index(aut))
+                employees.insert(0, swap)
+                cursor.execute('SELECT employee.name, employee.age, employee.job_role, dishes.name, dishes.type_dish FROM employee JOIN employee_dishes ON employee.employee_id = employee_dishes.employee_id JOIN dishes ON employee_dishes.dish_id = dishes.dish_id where employee.name = ?', name)
+                for row in cursor.fetchall():
+                    res.append({'ename': row[0], 'age': row[1], 'jr': row[2],
+                                     'dname': row[3], 'dt':row[4]})
+                conn.close()
+                return render_template('search_form.html', employees=employees, res=res, err=err)
+            else:
+                err = 'Invalid Employee'
+                conn.close()
+                return render_template('search_form.html', employees=employees, res=res, err=err)
+        return 'вы не авторизованы'
 
 if __name__ == '__main__':
     app.run()

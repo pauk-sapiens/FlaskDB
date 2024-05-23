@@ -17,7 +17,12 @@
     <form action="" method = "POST">
         <div class="form-group row">
             <label for="id">Order №</label>
-            <input type="text" class="form-control" name="id" id="id">
+                          <select class="custom-select" id="id", name="id">
+                  <option value="..." >...</option>
+      {% for order in orders %}
+      <option value="{{order}}" >{{order}}</option>
+      {% endfor %}
+  </select>
         </div>
         <div class="form-group row">
             <label for="date">Order Date</label>
@@ -25,13 +30,14 @@
         </div>
         <div class="form-group row">
             <label for="status">Order Status</label>
-                         <select class="custom-select" id="status", name="status">
+                                    <select class="custom-select" id="status", name="status">
                   <option value="..." >...</option>
         <option value="в процессе" >в процессе</option>
                   <option value="оформлен" >оформлен</option>
                   <option value="готов" >готов</option>
   </select>
         </div>
+
                 <div class="form-group row">
             <label for="payment">Order Payment</label>
                           <select class="custom-select" id="payment", name="payment">
@@ -42,6 +48,7 @@
 
   </select>
         </div>
+
 
 
         <button type="btnAdd" class="btn btn-dark btn-sm" >Submit</button>
